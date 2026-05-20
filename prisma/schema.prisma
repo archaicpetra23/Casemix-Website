@@ -1,0 +1,217 @@
+// Prisma Schema — Casemix RS (MySQL via XAMPP)
+// Sesuai ERD: 12 tabel (pasien, tenaga_kesehatan, rekam_medis, diagnosis,
+// rekam_diagnosis, tindakan, detail_tindakan, tarif_cbgs, klaim, role, unit, log_aktivitas)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ══════════════════════════════════════════════════════════════════
+// TABEL MASTER / REFERENSI
+// ══════════════════════════════════════════════════════════════════
+
+/// Tabel role — hak akses pengguna
+model Role {
+  id_role    Int    @id @default(autoincrement())
+  nama_role  String @unique @db.VarChar(100)
+
+  tenaga_kesehatan TenagaKesehatan[]
+
+  @@map("role")
+}
+
+/// Tabel unit — unit kerja rumah sakit
+model Unit {
+  id_unit    Int    @id @default(autoincrement())
+  nama_unit  String @unique @db.VarChar(100)
+
+  tenaga_kesehatan TenagaKesehatan[]
+
+  @@map("unit")
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 1. PASIEN
+// ══════════════════════════════════════════════════════════════════
+
+model Pasien {
+  id_pasien      Int      @id @default(autoincrement())
+  nik            String   @unique @db.VarChar(16)
+  nama           String   @db.VarChar(200)
+  tanggal_lahir  DateTime? @db.Date
+  jenis_kelamin  String   @db.VarChar(2)       // "L" atau "P"
+  alamat         String?  @db.Text
+  no_hp          String?  @db.VarChar(20)
+
+  rekam_medis RekamMedis[]
+
+  @@map("pasien")
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 2. TENAGA KESEHATAN
+// ══════════════════════════════════════════════════════════════════
+
+model TenagaKesehatan {
+  id_nakes       Int    @id @default(autoincrement())
+  nama           String @db.VarChar(200)
+  profesi        String? @db.VarChar(100)
+  spesialisasi   String? @db.VarChar(100)
+  no_str         String @unique @db.VarChar(30)
+  email          String @unique @db.VarChar(100)
+  password_hash  String @db.VarChar(255)
+  id_role        Int
+  id_unit        Int
+
+  role           Role   @relation(fields: [id_role], references: [id_role])
+  unit           Unit   @relation(fields: [id_unit], references: [id_unit])
+  rekam_medis    RekamMedis[]
+  log_aktivitas  LogAktivitas[]
+
+  @@index([id_role])
+  @@index([id_unit])
+  @@map("tenaga_kesehatan")
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 3. DIAGNOSIS (ICD-10)
+// ══════════════════════════════════════════════════════════════════
+
+model Diagnosis {
+  kode_icd10      String @id @db.VarChar(20)
+  nama_diagnosis  String @db.VarChar(300)
+  kategori        String? @db.VarChar(100)
+
+  rekam_diagnosis RekamDiagnosis[]
+
+  @@map("diagnosis")
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 4. TINDAKAN (ICD-9 CM)
+// ══════════════════════════════════════════════════════════════════
+
+model Tindakan {
+  kode_tindakan   String  @id @db.VarChar(20)
+  nama_tindakan   String  @db.VarChar(300)
+  tarif           Decimal @default(0) @db.Decimal(15, 2)
+
+  detail_tindakan DetailTindakan[]
+
+  @@map("tindakan")
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 5. TARIF CBGs
+// ══════════════════════════════════════════════════════════════════
+
+model TarifCbgs {
+  kode_cbgs   String  @id @db.VarChar(20)
+  deskripsi   String  @db.VarChar(300)
+  tarif       Decimal @default(0) @db.Decimal(15, 2)
+
+  klaim Klaim[]
+
+  @@map("tarif_cbgs")
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 6. REKAM MEDIS
+// ══════════════════════════════════════════════════════════════════
+
+model RekamMedis {
+  id_rekam           Int      @id @default(autoincrement())
+  id_pasien          Int
+  id_nakes           Int
+  tanggal_kunjungan  DateTime? @db.Date
+  keluhan            String?  @db.Text
+  catatan            String?  @db.Text
+
+  pasien  Pasien          @relation(fields: [id_pasien], references: [id_pasien], onDelete: Cascade)
+  nakes   TenagaKesehatan @relation(fields: [id_nakes], references: [id_nakes], onDelete: Cascade)
+
+  rekam_diagnosis RekamDiagnosis[]
+  detail_tindakan DetailTindakan[]
+  klaim           Klaim[]
+
+  @@index([id_pasien])
+  @@index([id_nakes])
+  @@index([tanggal_kunjungan])
+  @@map("rekam_medis")
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 7. REKAM DIAGNOSIS (junction: rekam_medis ↔ diagnosis)
+// ══════════════════════════════════════════════════════════════════
+
+model RekamDiagnosis {
+  id          Int    @id @default(autoincrement())
+  id_rekam    Int
+  kode_icd10  String @db.VarChar(20)
+  jenis       String @default("utama") @db.VarChar(20)
+
+  rekam_medis RekamMedis @relation(fields: [id_rekam], references: [id_rekam], onDelete: Cascade)
+  diagnosis   Diagnosis  @relation(fields: [kode_icd10], references: [kode_icd10], onDelete: Cascade)
+
+  @@unique([id_rekam, kode_icd10])
+  @@index([kode_icd10])
+  @@map("rekam_diagnosis")
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 8. DETAIL TINDAKAN (junction: rekam_medis ↔ tindakan)
+// ══════════════════════════════════════════════════════════════════
+
+model DetailTindakan {
+  id_detail       Int    @id @default(autoincrement())
+  id_rekam        Int
+  kode_tindakan   String @db.VarChar(20)
+  jumlah          Int    @default(1)
+
+  rekam_medis RekamMedis @relation(fields: [id_rekam], references: [id_rekam], onDelete: Cascade)
+  tindakan    Tindakan   @relation(fields: [kode_tindakan], references: [kode_tindakan], onDelete: Cascade)
+
+  @@unique([id_rekam, kode_tindakan])
+  @@index([kode_tindakan])
+  @@map("detail_tindakan")
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 9. KLAIM
+// ══════════════════════════════════════════════════════════════════
+
+model Klaim {
+  id_klaim       Int      @id @default(autoincrement())
+  id_rekam       Int
+  kode_cbgs      String?  @db.VarChar(20)
+  status_klaim   String   @default("pending") @db.VarChar(20)
+  tanggal_klaim  DateTime? @db.Date
+
+  rekam_medis RekamMedis @relation(fields: [id_rekam], references: [id_rekam], onDelete: Cascade)
+  tarif_cbgs  TarifCbgs? @relation(fields: [kode_cbgs], references: [kode_cbgs], onDelete: SetNull)
+
+  @@index([id_rekam])
+  @@index([kode_cbgs])
+  @@index([status_klaim])
+  @@map("klaim")
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 10. LOG AKTIVITAS
+// ══════════════════════════════════════════════════════════════════
+
+model LogAktivitas {
+  id_log      Int      @id @default(autoincrement())
+  id_nakes    Int
+  aktivitas   String   @db.VarChar(500)
+  waktu       DateTime @default(now())
+
+  nakes TenagaKesehatan @relation(fields: [id_nakes], references: [id_nakes], onDelete: Cascade)
+
+  @@index([id_nakes])
+  @@map("log_aktivitas")
+}
