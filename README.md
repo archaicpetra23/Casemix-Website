@@ -129,6 +129,54 @@ The application will automatically redirect you to the `/login` page. Use one of
 
 ---
 
+## Docker & Remote Access Guide
+
+You can run and manage the entire Casemix RS application (Next.js + MariaDB database) inside Docker using our pre-configured helper scripts.
+
+### Helper Scripts (Recommended)
+
+We have provided convenient scripts to control the application:
+
+- **Start Server & Tunnel:** Starts the database and Next.js containers in the background, then automatically launches a Cloudflare Tunnel. Press `Ctrl+C` in the terminal to stop both the tunnel and the Docker containers.
+  ```bash
+  ./start.sh
+  ```
+- **Stop Server:** Stops and shuts down the running containers manually.
+  ```bash
+  ./stop.sh
+  ```
+- **View Logs:** Follows the container startup, Prisma schema sync, and database seeding logs.
+  ```bash
+  ./logs.sh
+  ```
+
+### Manual Docker Commands
+
+If you prefer to run the commands manually:
+
+#### 1. Run via Docker Compose
+```bash
+sudo docker-compose up --build -d
+```
+*(Starts the database container on host port `3307` and Next.js container on port `3000`)*
+
+#### 2. Stop Containers
+```bash
+sudo docker-compose down
+```
+
+To stop containers and delete database data (for a clean reset):
+```bash
+sudo docker-compose down -v
+```
+
+#### 3. Share with Cloudflare Tunnel manually
+```bash
+cloudflared tunnel --url http://localhost:3000
+```
+
+---
+
 ## License
 
 This system was developed for academic and internal hospital needs. Commercialization without official permission is prohibited.

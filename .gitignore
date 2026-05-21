@@ -43,6 +43,9 @@ next-env.d.ts
 /src/generated/prisma
 
 # AI Agent files
+CLAUDE.md
+AGENTS.md
+GEMINI.md
 claude.md
 agent.md
 gemini.md
