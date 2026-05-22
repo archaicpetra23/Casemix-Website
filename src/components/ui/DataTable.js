@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
 export default function DataTable({
-  columns,       // [{ key, label, render, sortable, width }]
+  columns,       // [{ key, label, render, sortable, width, filterable }]
   data,          // array of objects
   loading = false,
   emptyMessage = "Tidak ada data ditemukan.",
@@ -19,16 +19,47 @@ export default function DataTable({
   const [page, setPage]       = useState(1);
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState("asc");
+  const [filters, setFilters] = useState({}); // { [colKey]: selectedValue }
 
-  // ── Search ──────────────────────────────────────────────────
+  // ── Compute filterable columns and unique values ───────────
+  const filterableCols = useMemo(() => {
+    return columns.filter(c => c.filterable);
+  }, [columns]);
+
+  const uniqueFilterValues = useMemo(() => {
+    const vals = {};
+    filterableCols.forEach(col => {
+      const set = new Set();
+      data.forEach(row => {
+        const val = row[col.key];
+        if (val !== undefined && val !== null && val !== "") {
+          set.add(val);
+        }
+      });
+      vals[col.key] = Array.from(set).sort();
+    });
+    return vals;
+  }, [data, filterableCols]);
+
+  // ── Search & Filter ──────────────────────────────────────────
   const filtered = useMemo(() => {
-    if (!search.trim()) return data;
+    let result = data;
+
+    // Apply column filters
+    Object.entries(filters).forEach(([colKey, filterVal]) => {
+      if (filterVal) {
+        result = result.filter(row => String(row[colKey]) === String(filterVal));
+      }
+    });
+
+    // Apply search filter
+    if (!search.trim()) return result;
     const q = search.toLowerCase();
     const keys = searchKeys ?? columns.map((c) => c.key);
-    return data.filter((row) =>
+    return result.filter((row) =>
       keys.some((k) => String(row[k] ?? "").toLowerCase().includes(q))
     );
-  }, [data, search, columns, searchKeys]);
+  }, [data, search, columns, searchKeys, filters]);
 
   // ── Sort ───────────────────────────────────────────────────
   const sorted = useMemo(() => {
@@ -57,26 +88,101 @@ export default function DataTable({
 
   return (
     <div className={`card ${className}`} style={{ overflow: "hidden" }}>
-      {/* Search bar */}
-      {searchable && (
-        <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid var(--border)" }}>
-          <div style={{ position: "relative", maxWidth: 320 }}>
-            <Search
-              size={15}
-              style={{
-                position: "absolute", left: 12, top: "50%",
-                transform: "translateY(-50%)",
-                color: "var(--text-muted)",
-              }}
-            />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Cari data..."
-              className="input"
-              style={{ paddingLeft: 36, fontSize: 13 }}
-            />
+      {/* Search & Filter & Sort Bar */}
+      {(searchable || filterableCols.length > 0 || columns.some(c => c.sortable)) && (
+        <div style={{ 
+          padding: "16px", 
+          borderBottom: "1px solid var(--border)",
+          display: "flex",
+          gap: 12,
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          background: "var(--surface)"
+        }}>
+          {/* Search Input */}
+          {searchable && (
+            <div style={{ position: "relative", minWidth: 260, flex: 1 }}>
+              <Search
+                size={15}
+                style={{
+                  position: "absolute", left: 12, top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "var(--text-muted)",
+                }}
+              />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Cari data..."
+                className="input"
+                style={{ paddingLeft: 36, fontSize: 13, height: 38 }}
+              />
+            </div>
+          )}
+
+          {/* Filtering and Sorting Controls */}
+          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            {/* Filter Dropdowns */}
+            {filterableCols.map(col => (
+              <div key={col.key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+                  {col.label}:
+                </span>
+                <select
+                  value={filters[col.key] ?? ""}
+                  onChange={(e) => {
+                    setFilters(prev => ({ ...prev, [col.key]: e.target.value }));
+                    setPage(1);
+                  }}
+                  className="input"
+                  style={{ fontSize: 13, height: 38, minWidth: 120, padding: "0 10px", borderRadius: "var(--radius-md)" }}
+                >
+                  <option value="">Semua</option>
+                  {uniqueFilterValues[col.key]?.map(val => (
+                    <option key={String(val)} value={String(val)}>
+                      {col.render ? col.render(val) : String(val)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
+
+            {/* Explicit Sort Controls */}
+            {columns.some(c => c.sortable) && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+                  Urutkan:
+                </span>
+                <select
+                  value={sortKey ?? ""}
+                  onChange={(e) => {
+                    const key = e.target.value;
+                    setSortKey(key || null);
+                    if (key && !sortKey) setSortDir("asc");
+                  }}
+                  className="input"
+                  style={{ fontSize: 13, height: 38, minWidth: 140, padding: "0 10px", borderRadius: "var(--radius-md)" }}
+                >
+                  <option value="">Default</option>
+                  {columns.filter(c => c.sortable).map(c => (
+                    <option key={c.key} value={c.key}>{c.label}</option>
+                  ))}
+                </select>
+
+                {sortKey && (
+                  <button
+                    onClick={() => setSortDir(d => d === "asc" ? "desc" : "asc")}
+                    className="btn btn-secondary"
+                    style={{ height: 38, width: 38, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", minWidth: "auto", borderRadius: "var(--radius-md)" }}
+                    title={sortDir === "asc" ? "Urutkan Z-A (Descending)" : "Urutkan A-Z (Ascending)"}
+                  >
+                    {sortDir === "asc" ? "▲" : "▼"}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

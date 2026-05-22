@@ -14,7 +14,7 @@ const COLUMNS = [
     render:(v) => <code style={{ fontSize:12, background:"var(--surface-hover)", padding:"2px 6px", borderRadius:4 }}>{v}</code> },
   { key:"formatted_id_pasien", label:"ID Pasien", sortable:true,
     render:(v) => <code style={{ fontSize:12, background:"var(--surface-hover)", padding:"2px 6px", borderRadius:4 }}>{v}</code> },
-  { key:"pasien", label:"Pasien", sortable:true, render:(_,row) => row.pasien?.nama ?? "—" },
+  { key:"nama_pasien", label:"Pasien", sortable:true },
   { key:"tanggal_kunjungan", label:"Tgl. Kunjungan", sortable:true, render:(v) => v ? new Date(v).toLocaleDateString("id-ID") : "—" },
   { key:"keluhan", label:"Keluhan", sortable:false,
     render:(v) => <span style={{ maxWidth:200, display:"block", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{v||"—"}</span> },
@@ -26,7 +26,7 @@ const COLUMNS = [
     render:(_,row) => (row.detail_tindakan?.length)
       ? row.detail_tindakan.map(dt => <span key={dt.tindakan?.kode_tindakan} title={dt.tindakan?.nama_tindakan} className="badge badge-default" style={{ fontSize:11, marginRight:4 }}>{dt.tindakan?.kode_tindakan}</span>)
       : "—" },
-  { key:"nakes", label:"Dokter", sortable:false, render:(_,row) => row.nakes?.nama ?? "—" },
+  { key:"nama_nakes", label:"Dokter", sortable:true, filterable:true },
 ];
 
 export default function RekamMedisPage() {
@@ -51,7 +51,9 @@ export default function RekamMedisPage() {
       setData(recs.map(r => ({
         ...r,
         formatted_id_rekam: String(r.id_rekam).padStart(6, '0'),
-        formatted_id_pasien: String(r.id_pasien).padStart(6, '0')
+        formatted_id_pasien: String(r.id_pasien).padStart(6, '0'),
+        nama_pasien: r.pasien?.nama ?? "—",
+        nama_nakes: r.nakes?.nama ?? "—"
       })));
       setPatients(pats); setWorkers(docs); setDiagnoses(diags); setProcs(procs);
     } catch (e) { console.error(e); } finally { setLoading(false); }

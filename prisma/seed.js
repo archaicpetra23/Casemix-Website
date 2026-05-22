@@ -163,109 +163,114 @@ async function main() {
   console.log("  ✅ 11 Tenaga Kesehatan");
 
   // 7. PASIEN (128)
-  const firstNames = ["Budi", "Siti", "Ahmad", "Dewi", "Hendra", "Ratna", "Joko", "Mega", "Agus", "Indah", "Rizky", "Putri", "Fajar", "Ayu", "Reza", "Dina", "Irfan", "Lestari", "Ilham", "Maya", "Dwi", "Tri", "Eko", "Nur", "Sri", "Andi", "Fitri", "Eka", "Yudi", "Rini"];
-  const lastNames = ["Santoso", "Rahayu", "Fauzi", "Lestari", "Wijaya", "Sari", "Susilo", "Puspita", "Hermawan", "Permatasari", "Pratama", "Hidayat", "Saputra", "Wahyuni", "Kusuma", "Nugroho", "Setiawan", "Utami", "Mahendra", "Wulandari", "Gunawan", "Siregar", "Nasution", "Simanjuntak", "Sitompul"];
-  const cities = ["Bandung", "Jakarta", "Surabaya", "Yogyakarta", "Semarang", "Medan", "Makassar", "Palembang", "Balikpapan", "Denpasar"];
-  const streets = ["Jl. Merdeka", "Jl. Sudirman", "Jl. Diponegoro", "Jl. Gajah Mada", "Jl. Pahlawan", "Jl. Imam Bonjol", "Jl. Ahmad Yani", "Jl. Veteran", "Jl. Pemuda", "Jl. Kartini", "Jl. Sisingamangaraja", "Jl. Hassanudin", "Jl. Gatot Subroto", "Jl. MT. Haryono", "Jl. Pangeran Antasari", "Jl. Mawar", "Jl. Melati", "Jl. Dahlia", "Jl. Anggrek", "Jl. Cempaka", "Jl. Kenanga", "Jl. Flamboyan", "Jl. Teratai", "Jl. Bougenville", "Jl. Kamboja", "Jl. Nusa Indah", "Jl. Raya Utama", "Jl. Raya Selatan", "Jl. Raya Timur", "Jl. Raya Barat"];
+  const existingPatientsCount = await prisma.pasien.count();
+  if (existingPatientsCount > 0) {
+    console.log("  ⚠️ Data pasien sudah ada. Seeding data dummy pasien & transaksi dilewati untuk menghindari duplikasi.");
+  } else {
+    const firstNames = ["Budi", "Siti", "Ahmad", "Dewi", "Hendra", "Ratna", "Joko", "Mega", "Agus", "Indah", "Rizky", "Putri", "Fajar", "Ayu", "Reza", "Dina", "Irfan", "Lestari", "Ilham", "Maya", "Dwi", "Tri", "Eko", "Nur", "Sri", "Andi", "Fitri", "Eka", "Yudi", "Rini"];
+    const lastNames = ["Santoso", "Rahayu", "Fauzi", "Lestari", "Wijaya", "Sari", "Susilo", "Puspita", "Hermawan", "Permatasari", "Pratama", "Hidayat", "Saputra", "Wahyuni", "Kusuma", "Nugroho", "Setiawan", "Utami", "Mahendra", "Wulandari", "Gunawan", "Siregar", "Nasution", "Simanjuntak", "Sitompul"];
+    const cities = ["Bandung", "Jakarta", "Surabaya", "Yogyakarta", "Semarang", "Medan", "Makassar", "Palembang", "Balikpapan", "Denpasar"];
+    const streets = ["Jl. Merdeka", "Jl. Sudirman", "Jl. Diponegoro", "Jl. Gajah Mada", "Jl. Pahlawan", "Jl. Imam Bonjol", "Jl. Ahmad Yani", "Jl. Veteran", "Jl. Pemuda", "Jl. Kartini", "Jl. Sisingamangaraja", "Jl. Hassanudin", "Jl. Gatot Subroto", "Jl. MT. Haryono", "Jl. Pangeran Antasari", "Jl. Mawar", "Jl. Melati", "Jl. Dahlia", "Jl. Anggrek", "Jl. Cempaka", "Jl. Kenanga", "Jl. Flamboyan", "Jl. Teratai", "Jl. Bougenville", "Jl. Kamboja", "Jl. Nusa Indah", "Jl. Raya Utama", "Jl. Raya Selatan", "Jl. Raya Timur", "Jl. Raya Barat"];
 
-  const newPatients = [];
-  for (let i = 1; i <= 128; i++) {
-    const year = 1950 + Math.floor(Math.random() * 60);
-    const month = 1 + Math.floor(Math.random() * 12);
-    const day = 1 + Math.floor(Math.random() * 28);
-    const tglLahir = new Date(`${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`);
-    const st = streets[Math.floor(Math.random() * streets.length)];
-    const ct = cities[Math.floor(Math.random() * cities.length)];
-    const no = Math.floor(1 + Math.random() * 150);
-    const rt = Math.floor(1 + Math.random() * 15).toString().padStart(2, "0");
-    const rw = Math.floor(1 + Math.random() * 10).toString().padStart(2, "0");
+    const newPatients = [];
+    for (let i = 1; i <= 128; i++) {
+      const year = 1950 + Math.floor(Math.random() * 60);
+      const month = 1 + Math.floor(Math.random() * 12);
+      const day = 1 + Math.floor(Math.random() * 28);
+      const tglLahir = new Date(`${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`);
+      const st = streets[Math.floor(Math.random() * streets.length)];
+      const ct = cities[Math.floor(Math.random() * cities.length)];
+      const no = Math.floor(1 + Math.random() * 150);
+      const rt = Math.floor(1 + Math.random() * 15).toString().padStart(2, "0");
+      const rw = Math.floor(1 + Math.random() * 10).toString().padStart(2, "0");
 
-    newPatients.push({
-      nik: "3271" + Math.floor(100000000000 + Math.random() * 900000000000).toString(),
-      nama: `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`,
-      tanggal_lahir: tglLahir,
-      jenis_kelamin: Math.random() > 0.5 ? "L" : "P",
-      alamat: `${st} No. ${no} RT ${rt}/RW ${rw}, ${ct}`,
-      no_hp: "08" + Math.floor(1000000000 + Math.random() * 9000000000).toString()
+      newPatients.push({
+        nik: "3271" + Math.floor(100000000000 + Math.random() * 900000000000).toString(),
+        nama: `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`,
+        tanggal_lahir: tglLahir,
+        jenis_kelamin: Math.random() > 0.5 ? "L" : "P",
+        alamat: `${st} No. ${no} RT ${rt}/RW ${rw}, ${ct}`,
+        no_hp: "08" + Math.floor(1000000000 + Math.random() * 9000000000).toString()
+      });
+    }
+
+    await prisma.pasien.createMany({ data: newPatients, skipDuplicates: true });
+    console.log("  ✅ 128 Pasien Dummy Bervariasi");
+
+    // Fetch created patients (getting exactly 128 of them to integrate)
+    const allPasien = await prisma.pasien.findMany({
+      orderBy: { id_pasien: 'desc' },
+      take: 128
     });
-  }
 
-  await prisma.pasien.createMany({ data: newPatients, skipDuplicates: true });
-  console.log("  ✅ 128 Pasien Dummy Bervariasi");
-
-  // Fetch created patients (getting exactly 128 of them to integrate)
-  const allPasien = await prisma.pasien.findMany({
-    orderBy: { id_pasien: 'desc' },
-    take: 128
-  });
-
-  // 8. INTEGRASI REKAM MEDIS & KLAIM (128)
-  const diagList = await prisma.diagnosis.findMany();
-  const procList = await prisma.tindakan.findMany();
-  const cbgList = await prisma.tarifCbgs.findMany();
-  
-  const keluhanList = [
-    "Pusing", "Demam tinggi", "Batuk berdahak", "Mual dan muntah", "Nyeri perut",
-    "Sesak nafas", "Lemas", "Nyeri dada", "Diare", "Sakit punggung",
-    "Nyeri sendi", "Gatal-gatal pada kulit", "Sakit kepala sebelah (migrain)",
-    "Penurunan berat badan drastis", "Kelelahan ekstrem", "Sakit tenggorokan",
-    "Pilek dan hidung tersumbat", "Sering buang air kecil", "Nyeri saat buang air kecil",
-    "Gangguan penglihatan (kabur)", "Mata merah dan berair", "Telinga berdengung",
-    "Jantung berdebar keras", "Kaki bengkak", "Kesemutan pada tangan atau kaki",
-    "Luka sulit sembuh", "Sulit tidur (insomnia)", "Keringat dingin di malam hari",
-    "Nyeri pada leher", "Kram otot", "Gangguan pencernaan (sembelit)"
-  ];
-  const catatanList = [
-    "Kondisi stabil", "Perlu rawat inap", "Observasi 24 jam", "Diberikan obat jalan",
-    "Rujuk ke spesialis", "Dehidrasi ringan", "Tanda vital normal", "Suhu 39C",
-    "Tekanan darah tinggi (Hipertensi)", "Gula darah sewaktu tinggi", "Menunggu hasil lab",
-    "Diet rendah garam dan lemak", "Diberikan terapi oksigen", "Memerlukan fisioterapi",
-    "Pasien menolak tindakan medis", "Disarankan bedrest total", "Kontrol ulang minggu depan",
-    "Kondisi membaik, boleh pulang", "Alergi terhadap antibiotik (Penicillin)",
-    "Ditemukan bunyi napas tambahan (wheezing)", "Pasien tampak pucat dan lemah",
-    "Diberikan injeksi anti-nyeri", "Respon baik terhadap pengobatan awal",
-    "Disertai mual, tidak bisa makan/minum", "Hasil rontgen menunjukkan kelainan"
-  ];
-  const statusList = ["pending", "disetujui", "ditolak"];
-
-  let rmCount = 0;
-  for (const p of allPasien) {
-    const nakes = nakesList[Math.floor(Math.random() * nakesList.length)];
-    const diag = diagList[Math.floor(Math.random() * diagList.length)];
-    const proc = procList[Math.floor(Math.random() * procList.length)];
-    const cbg = cbgList[Math.floor(Math.random() * cbgList.length)];
+    // 8. INTEGRASI REKAM MEDIS & KLAIM (128)
+    const diagList = await prisma.diagnosis.findMany();
+    const procList = await prisma.tindakan.findMany();
+    const cbgList = await prisma.tarifCbgs.findMany();
     
-    const date = new Date(Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000);
-    const dateKlaim = new Date(date.getTime() + 2 * 24 * 60 * 60 * 1000);
+    const keluhanList = [
+      "Pusing", "Demam tinggi", "Batuk berdahak", "Mual dan muntah", "Nyeri perut",
+      "Sesak nafas", "Lemas", "Nyeri dada", "Diare", "Sakit punggung",
+      "Nyeri sendi", "Gatal-gatal pada kulit", "Sakit kepala sebelah (migrain)",
+      "Penurunan berat badan drastis", "Kelelahan ekstrem", "Sakit tenggorokan",
+      "Pilek dan hidung tersumbat", "Sering buang air kecil", "Nyeri saat buang air kecil",
+      "Gangguan penglihatan (kabur)", "Mata merah dan berair", "Telinga berdengung",
+      "Jantung berdebar keras", "Kaki bengkak", "Kesemutan pada tangan atau kaki",
+      "Luka sulit sembuh", "Sulit tidur (insomnia)", "Keringat dingin di malam hari",
+      "Nyeri pada leher", "Kram otot", "Gangguan pencernaan (sembelit)"
+    ];
+    const catatanList = [
+      "Kondisi stabil", "Perlu rawat inap", "Observasi 24 jam", "Diberikan obat jalan",
+      "Rujuk ke spesialis", "Dehidrasi ringan", "Tanda vital normal", "Suhu 39C",
+      "Tekanan darah tinggi (Hipertensi)", "Gula darah sewaktu tinggi", "Menunggu hasil lab",
+      "Diet rendah garam dan lemak", "Diberikan terapi oksigen", "Memerlukan fisioterapi",
+      "Pasien menolak tindakan medis", "Disarankan bedrest total", "Kontrol ulang minggu depan",
+      "Kondisi membaik, boleh pulang", "Alergi terhadap antibiotik (Penicillin)",
+      "Ditemukan bunyi napas tambahan (wheezing)", "Pasien tampak pucat dan lemah",
+      "Diberikan injeksi anti-nyeri", "Respon baik terhadap pengobatan awal",
+      "Disertai mual, tidak bisa makan/minum", "Hasil rontgen menunjukkan kelainan"
+    ];
+    const statusList = ["pending", "disetujui", "ditolak"];
 
-    await prisma.rekamMedis.create({
-      data: {
-        id_pasien: p.id_pasien,
-        id_nakes: nakes.id_nakes,
-        tanggal_kunjungan: date,
-        keluhan: keluhanList[Math.floor(Math.random() * keluhanList.length)],
-        catatan: catatanList[Math.floor(Math.random() * catatanList.length)],
-        rekam_diagnosis: { create: [{ kode_icd10: diag.kode_icd10, jenis: "utama" }] },
-        detail_tindakan: { create: [{ kode_tindakan: proc.kode_tindakan, jumlah: 1 }] },
-        klaim: { create: [{ kode_cbgs: cbg.kode_cbgs, status_klaim: statusList[Math.floor(Math.random() * statusList.length)], tanggal_klaim: dateKlaim }] }
-      }
-    });
-    rmCount++;
-  }
-  console.log(`  ✅ ${rmCount} Rekam Medis & Klaim Terintegrasi`);
+    let rmCount = 0;
+    for (const p of allPasien) {
+      const nakes = nakesList[Math.floor(Math.random() * nakesList.length)];
+      const diag = diagList[Math.floor(Math.random() * diagList.length)];
+      const proc = procList[Math.floor(Math.random() * procList.length)];
+      const cbg = cbgList[Math.floor(Math.random() * cbgList.length)];
+      
+      const date = new Date(Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000);
+      const dateKlaim = new Date(date.getTime() + 2 * 24 * 60 * 60 * 1000);
 
-  // 9. LOG AKTIVITAS (10)
-  const activities = ["Login ke sistem", "Membuat rekam medis pasien", "Melakukan operasi apendektomi", "Update catatan perawatan rawat inap", "Verifikasi klaim pasien"];
-  const logs = [];
-  for(let i=0; i<10; i++){
-    logs.push({
-      id_nakes: nakesList[Math.floor(Math.random() * nakesList.length)].id_nakes,
-      aktivitas: activities[Math.floor(Math.random() * activities.length)],
-      waktu: new Date(Date.now() - Math.floor(Math.random() * 10) * 24 * 60 * 60 * 1000)
-    });
+      await prisma.rekamMedis.create({
+        data: {
+          id_pasien: p.id_pasien,
+          id_nakes: nakes.id_nakes,
+          tanggal_kunjungan: date,
+          keluhan: keluhanList[Math.floor(Math.random() * keluhanList.length)],
+          catatan: catatanList[Math.floor(Math.random() * catatanList.length)],
+          rekam_diagnosis: { create: [{ kode_icd10: diag.kode_icd10, jenis: "utama" }] },
+          detail_tindakan: { create: [{ kode_tindakan: proc.kode_tindakan, jumlah: 1 }] },
+          klaim: { create: [{ kode_cbgs: cbg.kode_cbgs, status_klaim: statusList[Math.floor(Math.random() * statusList.length)], tanggal_klaim: dateKlaim }] }
+        }
+      });
+      rmCount++;
+    }
+    console.log(`  ✅ ${rmCount} Rekam Medis & Klaim Terintegrasi`);
+
+    // 9. LOG AKTIVITAS (10)
+    const activities = ["Login ke sistem", "Membuat rekam medis pasien", "Melakukan operasi apendektomi", "Update catatan perawatan rawat inap", "Verifikasi klaim pasien"];
+    const logs = [];
+    for(let i=0; i<10; i++){
+      logs.push({
+        id_nakes: nakesList[Math.floor(Math.random() * nakesList.length)].id_nakes,
+        aktivitas: activities[Math.floor(Math.random() * activities.length)],
+        waktu: new Date(Date.now() - Math.floor(Math.random() * 10) * 24 * 60 * 60 * 1000)
+      });
+    }
+    await prisma.logAktivitas.createMany({ data: logs });
+    console.log("  ✅ 10 Log Aktivitas");
   }
-  await prisma.logAktivitas.createMany({ data: logs });
-  console.log("  ✅ 10 Log Aktivitas");
 
   // Summary
   const t = ["pasien","tenagaKesehatan","diagnosis","tindakan","tarifCbgs","rekamMedis","rekamDiagnosis","detailTindakan","klaim","logAktivitas","role","unit"];

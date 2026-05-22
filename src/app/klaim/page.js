@@ -13,11 +13,11 @@ const STATUS_OPTIONS = ["pending","disetujui","ditolak"];
 
 const COLUMNS = [
   { key:"id_klaim", label:"ID", sortable:true, render:(v) => <code style={{ fontSize:12, background:"var(--surface-hover)", padding:"2px 6px", borderRadius:4 }}>{String(v).padStart(6, '0')}</code> },
-  { key:"pasien", label:"Pasien", sortable:true, render:(_,row) => <span style={{ fontWeight:500 }}>{row.rekam_medis?.pasien?.nama ?? "—"}</span> },
-  { key:"tarif_cbgs", label:"Kode CBGs", sortable:false,
-    render:(_,row) => row.tarif_cbgs ? <span title={row.tarif_cbgs.deskripsi} className="badge badge-default" style={{ fontSize:11 }}>{row.tarif_cbgs.kode_cbgs}</span> : "—" },
-  { key:"status_klaim", label:"Status", sortable:true, render:(v) => <StatusBadge status={v} /> },
-  { key:"ina_cbgs", label:"INA-CBG's (Tarif)", sortable:false, render:(_,row) => row.tarif_cbgs?.tarif ? <span style={{fontWeight:600}}>{rupiahFormat(row.tarif_cbgs.tarif)}</span> : "—" },
+  { key:"nama_pasien", label:"Pasien", sortable:true },
+  { key:"kode_cbg", label:"Kode CBGs", sortable:true, filterable:true,
+    render:(v) => v !== "—" ? <span className="badge badge-default" style={{ fontSize:11 }}>{v}</span> : "—" },
+  { key:"status_klaim", label:"Status", sortable:true, filterable:true, render:(v) => <StatusBadge status={v} /> },
+  { key:"tarif_cbg", label:"INA-CBG's (Tarif)", sortable:true, render:(v) => <span style={{fontWeight:600}}>{rupiahFormat(v)}</span> },
 ];
 
 function rupiahFormat(n) { return new Intl.NumberFormat("id-ID", { style:"currency", currency:"IDR", minimumFractionDigits:0 }).format(Number(n)||0); }
@@ -38,7 +38,13 @@ export default function KlaimPage() {
   const load = useCallback(async () => {
     try {
       const [claims, recs, cbgsList] = await Promise.all([claimsApi.list(), recordsApi.list(), inaCbgsApi.list()]);
-      setData(claims); setRecords(recs); setCbgs(cbgsList);
+      setData(claims.map(c => ({
+        ...c,
+        nama_pasien: c.rekam_medis?.pasien?.nama ?? "—",
+        tarif_cbg: c.tarif_cbgs?.tarif ?? 0,
+        kode_cbg: c.tarif_cbgs?.kode_cbgs ?? "—"
+      })));
+      setRecords(recs); setCbgs(cbgsList);
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);

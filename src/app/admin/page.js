@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import DataTable from "@/components/ui/DataTable";
 import {
   Shield, Activity, Users, BarChart3, Trash2, RefreshCw,
   Search, ChevronLeft, ChevronRight, AlertTriangle, CheckCircle,
   Clock, XCircle, Database, FileText, CreditCard, BookOpen,
-  Stethoscope, UserCog,
+  Stethoscope, UserCog, Terminal, Play, CheckCircle2, AlertCircle,
 } from "lucide-react";
 
 /* ─── helpers ─── */
@@ -384,12 +385,349 @@ function DatabaseTab({ stats }) {
   );
 }
 
+const QUERY_METADATA = [
+  {
+    title: "1. Pasien dengan Biaya Klaim di Atas Rata-rata Tarif CBGs",
+    description: "Menampilkan daftar pasien beserta detail kode dan tarif INA-CBGs mereka yang nilainya di atas rata-rata nasional tarif CBGs di seluruh rumah sakit.",
+    tables: ["pasien (patient)", "rekam_medis (medical record)", "klaim (claim)", "tarif_cbgs (INA-CBGs tariffs)"],
+    subqueryGoal: "Menghitung rata-rata tarif CBGs seluruh rumah sakit.",
+    sql: `SELECT 
+  p.id_pasien,
+  p.nama AS nama_pasien,
+  rm.id_rekam,
+  tc.kode_cbgs,
+  tc.deskripsi,
+  tc.tarif AS tarif_cbgs
+FROM pasien p
+JOIN rekam_medis rm ON p.id_pasien = rm.id_pasien
+JOIN klaim k ON rm.id_rekam = k.id_rekam
+JOIN tarif_cbgs tc ON k.kode_cbgs = tc.kode_cbgs
+WHERE tc.tarif > (
+  SELECT AVG(tc2.tarif) 
+  FROM tarif_cbgs tc2
+)
+ORDER BY tc.tarif DESC`
+  },
+  {
+    title: "2. Tenaga Kesehatan di Atas Rata-rata Frekuensi Penanganan",
+    description: "Mengidentifikasi tenaga kesehatan (Dokter/Perawat) yang paling aktif, dengan kriteria memiliki jumlah penanganan rekam medis pasien di atas rata-rata nakes lainnya.",
+    tables: ["tenaga_kesehatan (healthcare worker)", "unit (department)", "rekam_medis (medical record)"],
+    subqueryGoal: "Menghitung rata-rata frekuensi penanganan medis per nakes di rumah sakit.",
+    sql: `SELECT 
+  nk.id_nakes,
+  nk.nama AS nama_nakes,
+  u.nama_unit,
+  COUNT(rm.id_rekam) AS jumlah_penanganan
+FROM tenaga_kesehatan nk
+JOIN unit u ON nk.id_unit = u.id_unit
+LEFT JOIN rekam_medis rm ON nk.id_nakes = rm.id_nakes
+GROUP BY nk.id_nakes, nk.nama, u.nama_unit
+HAVING COUNT(rm.id_rekam) > (
+  SELECT AVG(sub.total)
+  FROM (
+    SELECT COUNT(id_rekam) AS total
+    FROM rekam_medis
+    GROUP BY id_nakes
+  ) sub
+)
+ORDER BY jumlah_penanganan DESC`
+  },
+  {
+    title: "3. Diagnosis Terpopuler dengan Akumulasi Biaya Tindakan Tinggi",
+    description: "Menampilkan diagnosis (ICD-10) yang penanganannya memerlukan tindakan medis (ICD-9 CM) dengan total akumulasi biaya di atas rata-rata harga satuan tindakan rumah sakit.",
+    tables: ["diagnosis (ICD-10)", "rekam_diagnosis", "rekam_medis", "detail_tindakan", "tindakan (ICD-9 CM)"],
+    subqueryGoal: "Menghitung rata-rata harga tarif satuan tindakan medis tunggal.",
+    sql: `SELECT 
+  d.kode_icd10,
+  d.nama_diagnosis,
+  COUNT(DISTINCT rm.id_rekam) AS frekuensi_kasus,
+  SUM(t.tarif * dt.jumlah) AS total_biaya_tindakan
+FROM diagnosis d
+JOIN rekam_diagnosis rd ON d.kode_icd10 = rd.kode_icd10
+JOIN rekam_medis rm ON rd.id_rekam = rm.id_rekam
+JOIN detail_tindakan dt ON rm.id_rekam = dt.id_rekam
+JOIN tindakan t ON dt.kode_tindakan = t.kode_tindakan
+GROUP BY d.kode_icd10, d.nama_diagnosis
+HAVING SUM(t.tarif * dt.jumlah) > (
+  SELECT AVG(t2.tarif) FROM tindakan t2
+)
+ORDER BY total_biaya_tindakan DESC`
+  },
+  {
+    title: "4. Klaim Pending dengan Nilai Tindakan Melebihi Rata-rata Klaim Disetujui",
+    description: "Menganalisis antrean klaim pending yang memiliki nilai tindakan medis di atas rata-rata nilai tindakan medis dari kelompok klaim yang sudah sukses disetujui (Approved).",
+    tables: ["klaim (claim)", "rekam_medis", "detail_tindakan", "tindakan (ICD-9 CM)"],
+    subqueryGoal: "Menghitung rata-rata total nilai tindakan medis per klaim yang sudah sukses disetujui.",
+    sql: `SELECT 
+  k.id_klaim,
+  k.status_klaim,
+  rm.id_rekam,
+  SUM(t.tarif * dt.jumlah) AS total_estimasi_tindakan
+FROM klaim k
+JOIN rekam_medis rm ON k.id_rekam = rm.id_rekam
+JOIN detail_tindakan dt ON rm.id_rekam = dt.id_rekam
+JOIN tindakan t ON dt.kode_tindakan = t.kode_tindakan
+WHERE k.status_klaim = 'pending'
+GROUP BY k.id_klaim, k.status_klaim, rm.id_rekam
+HAVING SUM(t.tarif * dt.jumlah) > (
+  SELECT AVG(sub.total_tindakan)
+  FROM (
+    SELECT SUM(t2.tarif * dt2.jumlah) AS total_tindakan
+    FROM klaim k2
+    JOIN rekam_medis rm2 ON k2.id_rekam = rm2.id_rekam
+    JOIN detail_tindakan dt2 ON rm2.id_rekam = dt2.id_rekam
+    JOIN tindakan t2 ON dt2.kode_tindakan = t2.kode_tindakan
+    WHERE k2.status_klaim = 'disetujui'
+    GROUP BY k2.id_klaim
+  ) sub
+)
+ORDER BY total_estimasi_tindakan DESC`
+  },
+  {
+    title: "5. Pasien Kunjungan Berulang dengan Diagnosis Terpopuler (Top 5)",
+    description: "Menampilkan pasien bertipe kronis (memiliki kunjungan > 1 kali) yang mengidap penyakit terpopuler di rumah sakit (berdasarkan top 5 diagnosis terpopuler).",
+    tables: ["pasien (patient)", "rekam_medis", "rekam_diagnosis", "diagnosis (ICD-10)"],
+    subqueryGoal: "Mengidentifikasi daftar 5 kode diagnosis ICD-10 dengan frekuensi kemunculan terbanyak di rekam medis.",
+    sql: `SELECT 
+  p.id_pasien,
+  p.nama AS nama_pasien,
+  COUNT(rm.id_rekam) AS total_kunjungan,
+  GROUP_CONCAT(DISTINCT d.nama_diagnosis SEPARATOR '; ') AS riwayat_diagnosis
+FROM pasien p
+JOIN rekam_medis rm ON p.id_pasien = rm.id_pasien
+JOIN rekam_diagnosis rd ON rm.id_rekam = rd.id_rekam
+JOIN diagnosis d ON rd.kode_icd10 = d.kode_icd10
+WHERE rd.kode_icd10 IN (
+  SELECT sub.kode_icd10
+  FROM (
+    SELECT kode_icd10, COUNT(id) AS cnt
+    FROM rekam_diagnosis
+    GROUP BY kode_icd10
+    ORDER BY cnt DESC
+    LIMIT 5
+  ) sub
+)
+GROUP BY p.id_pasien, p.nama
+HAVING COUNT(rm.id_rekam) > 1`
+  },
+  {
+    title: "6. Log Aktivitas Staf dengan Aktivitas Di Atas Rata-rata Unitnya",
+    description: "Mengidentifikasi anggota staf di setiap unit kerja yang memiliki performa atau intensitas interaksi CRUD sistem di atas rata-rata jumlah log aktivitas nakes di unit kerjanya sendiri.",
+    tables: ["tenaga_kesehatan (healthcare worker)", "unit (department)", "log_aktivitas (audit logs)"],
+    subqueryGoal: "Menghitung rata-rata log aktivitas per nakes dalam unit kerja yang sama (correlated subquery).",
+    sql: `SELECT 
+  nk.id_nakes,
+  nk.nama AS nama_nakes,
+  u.nama_unit,
+  COUNT(la.id_log) AS jumlah_aktivitas
+FROM tenaga_kesehatan nk
+JOIN unit u ON nk.id_unit = u.id_unit
+JOIN log_aktivitas la ON nk.id_nakes = la.id_nakes
+GROUP BY nk.id_nakes, nk.nama, u.nama_unit
+HAVING COUNT(la.id_log) > (
+  SELECT AVG(sub.total_log)
+  FROM (
+    SELECT nk2.id_unit, nk2.id_nakes, COUNT(la2.id_log) AS total_log
+    FROM tenaga_kesehatan nk2
+    LEFT JOIN log_aktivitas la2 ON nk2.id_nakes = la2.id_nakes
+    GROUP BY nk2.id_unit, nk2.id_nakes
+  ) sub
+  WHERE sub.id_unit = nk.id_unit
+)
+ORDER BY jumlah_aktivitas DESC`
+  }
+];
+
+function formatColumnLabel(name) {
+  return name
+    .split("_")
+    .map(word => {
+      const upper = word.toUpperCase();
+      if (upper === "ID") return "ID";
+      if (upper === "ICD10") return "ICD-10";
+      if (upper === "ICD9") return "ICD-9";
+      if (upper === "CBGS") return "CBGs";
+      if (upper === "NIK") return "NIK";
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
+
+function ReportsTab() {
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const query = QUERY_METADATA[selectedIdx];
+
+  const handleExecute = async () => {
+    setLoading(true);
+    setError(null);
+    setResults(null);
+    try {
+      const res = await fetch(`/api/reports?queryIndex=${selectedIdx}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Gagal mengeksekusi query.");
+      setResults(data);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const columns = results?.columns.map(colName => ({
+    key: colName,
+    label: formatColumnLabel(colName),
+    sortable: true,
+    render: (v) => {
+      if (v === null || v === undefined) return "—";
+      if (colName.includes("tarif") || colName.includes("biaya") || colName.includes("estimasi")) {
+        return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(v);
+      }
+      if (colName.includes("formatted")) {
+        return <code style={{ fontSize:12, background:"var(--surface-hover)", padding:"2px 6px", borderRadius:4 }}>{v}</code>;
+      }
+      if (colName.includes("id_")) {
+        return <code style={{ fontSize:11, color:"var(--text-muted)" }}>#{v}</code>;
+      }
+      return String(v);
+    }
+  })) ?? [];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ background: "var(--info-light)", border: "1px solid var(--info)", padding: "14px 20px", borderRadius: "var(--radius-lg)", display: "flex", gap: 14, alignItems: "center" }}>
+        <CheckCircle2 size={24} color="var(--info)" style={{ flexShrink: 0 }} />
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "var(--info-dark)" }}>Aspek Pengambilan Informasi Kompleks (30% Nilai Sumatif)</p>
+          <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2 }}>
+            Menggunakan raw SQL query teroptimasi yang menggabungkan lebih dari 2 tabel relasional dan subquery bertingkat.
+          </p>
+        </div>
+        <a href="/LAPORAN_SUMATIF.md" target="_blank" className="btn btn-ghost btn-sm" style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--info-dark)", background: "rgba(37,99,235,0.08)" }}>
+          <FileText size={14} /> Dokumen Laporan
+        </a>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20, alignItems: "start" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {QUERY_METADATA.map((q, idx) => (
+            <button
+              key={idx}
+              onClick={() => { setSelectedIdx(idx); setResults(null); setError(null); }}
+              className="card"
+              style={{
+                textAlign: "left",
+                padding: "12px 14px",
+                cursor: "pointer",
+                border: selectedIdx === idx ? "2px solid var(--primary)" : "1px solid var(--border)",
+                background: selectedIdx === idx ? "var(--primary-light)" : "var(--surface)",
+                transition: "all var(--transition-base)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 4
+              }}
+            >
+              <span style={{ fontSize: 12, fontWeight: 700, color: selectedIdx === idx ? "var(--primary-dark)" : "var(--text-primary)" }}>
+                {q.title}
+              </span>
+              <span style={{ fontSize: 11, color: "var(--text-muted)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                {q.description}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div className="card" style={{ padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <h3 style={{ fontSize: 15, fontWeight: 800, color: "var(--text-primary)" }}>{query.title}</h3>
+              <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>{query.description}</p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, background: "var(--surface-hover)", padding: 12, borderRadius: "var(--radius-md)" }}>
+              <div>
+                <p style={{ fontSize: 10, fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase" }}>Tabel Terlibat</p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 }}>
+                  {query.tables.map((t, i) => (
+                    <span key={i} style={{ fontSize: 10, fontWeight: 600, background: "var(--surface)", border: "1px solid var(--border)", padding: "1px 6px", borderRadius: 8 }}>
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p style={{ fontSize: 10, fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase" }}>Fungsi Subquery</p>
+                <p style={{ fontSize: 11, color: "var(--text-primary)", fontWeight: 500, marginTop: 4 }}>{query.subqueryGoal}</p>
+              </div>
+            </div>
+
+            <div style={{ background: "#0F172A", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
+              <div style={{ background: "#1E293B", padding: "6px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #334155" }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Terminal size={11} /> SQL Command
+                </span>
+                <span style={{ fontSize: 9, color: "#64748B" }}>MariaDB / MySQL</span>
+              </div>
+              <pre style={{ margin: 0, padding: 12, overflowX: "auto", fontSize: 11, color: "#E2E8F0", fontFamily: "Consolas, Monaco, monospace", lineHeight: 1.4 }}>
+                <code>{query.sql}</code>
+              </pre>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button 
+                onClick={handleExecute} 
+                disabled={loading} 
+                className="btn btn-primary btn-sm"
+                style={{ display: "flex", alignItems: "center", gap: 6 }}
+              >
+                <Play size={13} fill="currentColor" /> {loading ? "Mengeksekusi..." : "Jalankan Query"}
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <div className="card" style={{ padding: 14, border: "1px solid #FECACA", background: "var(--danger-light)", display: "flex", gap: 10, color: "var(--danger)" }}>
+              <AlertCircle size={18} style={{ flexShrink: 0 }} />
+              <div style={{ fontSize: 12 }}>
+                <strong style={{ display: "block" }}>Galat eksekusi database:</strong>
+                {error}
+              </div>
+            </div>
+          )}
+
+          {results && (
+            <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "flex", gap: 16, alignItems: "center", fontSize: 12, color: "var(--text-muted)" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Clock size={12} /> {results.executionTimeMs} ms</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Table size={12} /> {results.rows.length} baris</span>
+                <span style={{ background: "var(--success-light)", color: "var(--success)", padding: "1px 6px", borderRadius: 8, fontSize: 10, fontWeight: 700 }}>Sukses</span>
+              </div>
+
+              <DataTable
+                columns={columns}
+                data={results.rows}
+                searchable={true}
+                pageSize={10}
+                emptyMessage="Query berhasil dieksekusi tetapi mengembalikan 0 baris."
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── MAIN PAGE ─── */
 const TABS = [
   { id: "overview",  label: "Overview",         icon: BarChart3  },
   { id: "logs",      label: "Audit Log",        icon: Activity   },
   { id: "users",     label: "Manajemen User",   icon: Users      },
   { id: "database",  label: "Info Database",    icon: Database   },
+  { id: "reports",   label: "Analisis Query",   icon: Terminal   },
 ];
 
 export default function AdminPage() {
@@ -442,6 +780,7 @@ export default function AdminPage() {
         {tab === "logs"      && <AuditLogTab />}
         {tab === "users"     && <UsersTab />}
         {tab === "database"  && <DatabaseTab stats={stats} />}
+        {tab === "reports"   && <ReportsTab />}
       </div>
     </DashboardLayout>
   );

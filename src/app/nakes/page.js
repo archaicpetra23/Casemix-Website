@@ -22,8 +22,8 @@ const COLUMNS = [
   { key:"profesi", label:"Profesi", sortable:true, render: (v, row) => v + (row.spesialisasi ? ` (${row.spesialisasi})` : "") },
   { key:"no_str",  label:"No. STR", sortable:true, render:(v) => <code style={{fontSize:12, padding:"2px 6px", background:"var(--surface-hover)", borderRadius:4}}>{v}</code> },
   { key:"email",label:"Email",sortable:true },
-  { key:"role",    label:"Role",    sortable:true, render:(_,row) => <span className="badge badge-info">{row.role?.nama_role}</span> },
-  { key:"unit",    label:"Unit",    sortable:true, render:(_,row) => <span className="badge badge-default">{row.unit?.nama_unit}</span> },
+  { key:"nama_role", label:"Role", sortable:true, filterable:true, render:(v) => <span className="badge badge-info">{v}</span> },
+  { key:"nama_unit", label:"Unit", sortable:true, filterable:true, render:(v) => <span className="badge badge-default">{v}</span> },
 ];
 
 export default function NakesPage() {
@@ -41,7 +41,12 @@ export default function NakesPage() {
   const load = useCallback(async () => {
     try {
       const [workers, r, u] = await Promise.all([healthWorkersApi.list(), rolesApi.list(), unitsApi.list()]);
-      setData(workers); setRoles(r); setUnits(u);
+      setData(workers.map(w => ({
+        ...w,
+        nama_role: w.role?.nama_role ?? "—",
+        nama_unit: w.unit?.nama_unit ?? "—"
+      })));
+      setRoles(r); setUnits(u);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   }, []);
