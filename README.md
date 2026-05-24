@@ -46,7 +46,7 @@ Ensure your system has the following installed:
 ### 2. Clone the Repository
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/archaicpetra23/Casemix-Website.git
 cd casemix-rs
 ```
 
