@@ -72,7 +72,7 @@ export default function KlaimPage() {
 
   return (
     <DashboardLayout title="Klaim BPJS" subtitle="Monitoring klaim pasien">
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
+      <div className="grid-responsive-3" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
         {[{ label:"Pending", key:"pending", color:"amber", icon:Clock }, { label:"Disetujui", key:"disetujui", color:"green", icon:CheckCircle }, { label:"Ditolak", key:"ditolak", color:"red", icon:XCircle }].map(({ label, key, color, icon:Icon }, i) => {
           const c = { amber:{bg:"var(--warning-light)",text:"var(--warning)",border:"#FDE68A"}, green:{bg:"var(--success-light)",text:"var(--success)",border:"#A7F3D0"}, red:{bg:"var(--danger-light)",text:"var(--danger)",border:"#FECACA"} }[color];
           return (<div key={key} className="card animate-fade-in-up" style={{ padding:"16px 20px", animationDelay:`${i*80}ms`, animationFillMode:"both", background:c.bg, borderColor:c.border, display:"flex", alignItems:"center", gap:12, cursor:"pointer", outline:filter===key?`2px solid ${c.text}`:"none" }} onClick={() => setFilter(filter===key?"semua":key)}>
@@ -80,7 +80,7 @@ export default function KlaimPage() {
         })}
       </div>
 
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      <div className="flex-responsive-header" style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
           <div style={{ width:42, height:42, borderRadius:12, background:"var(--primary-light)", display:"flex", alignItems:"center", justifyContent:"center" }}><CreditCard size={22} color="var(--primary)" /></div>
           <div><h2 style={{ fontSize:15, fontWeight:700 }}>Daftar Klaim</h2><p style={{ fontSize:12, color:"var(--text-muted)" }}>{filtered.length} klaim</p></div>

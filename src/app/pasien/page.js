@@ -71,14 +71,14 @@ export default function PasienPage() {
 
   return (
     <DashboardLayout title="Data Pasien" subtitle="Manajemen data pasien rumah sakit">
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      <div className="flex-responsive-header" style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
           <div style={{ width:42, height:42, borderRadius:12, background:"var(--info-light)", display:"flex", alignItems:"center", justifyContent:"center" }}>
             <UserCircle size={22} color="var(--info)" />
           </div>
           <div>
             <h2 style={{ fontSize:15, fontWeight:700 }}>Daftar Pasien</h2>
-            <p style={{ fontSize:12, color:"var(--text-muted)" }}>{data.length} pasien terdaftar · dari MySQL</p>
+            <p style={{ fontSize:12, color:"var(--text-muted)" }}>{data.length} pasien terdaftar · data dari MySQL</p>
           </div>
         </div>
         <button id="btn-tambah-pasien" className="btn btn-primary" onClick={openAdd}>

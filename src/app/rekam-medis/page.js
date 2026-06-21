@@ -93,7 +93,7 @@ export default function RekamMedisPage() {
 
   return (
     <DashboardLayout title="Rekam Medis" subtitle="Riwayat kunjungan dan diagnosa pasien">
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      <div className="flex-responsive-header" style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
           <div style={{ width:42, height:42, borderRadius:12, background:"var(--accent-light)", display:"flex", alignItems:"center", justifyContent:"center" }}>
             <FileText size={22} color="var(--accent)" />

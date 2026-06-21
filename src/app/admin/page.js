@@ -58,7 +58,7 @@ function OverviewTab({ stats }) {
       {/* klaim status */}
       <div className="card" style={{ padding: 24 }}>
         <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Status Klaim BPJS</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+        <div className="grid-responsive-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
           {[
             { label: "Pending",   val: klaim.pending,    icon: Clock,         color: "#F59E0B", bg: "#FEF3C7" },
             { label: "Disetujui", val: klaim.disetujui,  icon: CheckCircle,   color: "#10B981", bg: "#D1FAE5" },
@@ -365,7 +365,7 @@ function DatabaseTab({ stats }) {
           <Database size={20} color="#38BDF8" />
           <h3 style={{ fontSize: 15, fontWeight: 700 }}>Koneksi Database</h3>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div className="grid-responsive-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           {[
             ["Engine",    "MySQL via Prisma ORM"],
             ["Database",  "casemix_db"],
@@ -611,7 +611,7 @@ function ReportsTab() {
         </a>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20, alignItems: "start" }}>
+      <div className="grid-responsive-reports" style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20, alignItems: "start" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {QUERY_METADATA.map((q, idx) => (
             <button
@@ -757,7 +757,7 @@ export default function AdminPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 4, background: "var(--surface-hover)", padding: 4, borderRadius: 12, marginBottom: 24, width: "fit-content" }}>
+      <div className="scroll-x-container" style={{ display: "flex", gap: 4, background: "var(--surface-hover)", padding: 4, borderRadius: 12, marginBottom: 24, width: "fit-content", maxWidth: "100%" }}>
         {TABS.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setTab(id)}
             className="btn btn-sm"

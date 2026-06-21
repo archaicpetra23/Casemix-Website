@@ -84,7 +84,7 @@ export default function NakesPage() {
   return (
     <DashboardLayout title="Manajemen Tenaga Kesehatan" subtitle="Kelola data tenaga kesehatan & akun sistem">
       
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <div className="flex-responsive-header" style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
           <div style={{width:42,height:42,borderRadius:12,background:"#EDE9FE",display:"flex",alignItems:"center",justifyContent:"center"}}>
             <Stethoscope size={22} color="#7C3AED" />
@@ -120,7 +120,7 @@ export default function NakesPage() {
           <div className="input-group"><label className="input-label">Nama Lengkap *</label>
             <input type="text" value={form.nama} onChange={e=>setForm(f=>({...f,nama:e.target.value}))} className="input" placeholder="dr. Susi Susanti" /></div>
           
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+          <div className="grid-responsive-2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
             <div className="input-group"><label className="input-label">Profesi</label>
               <input type="text" value={form.profesi||""} onChange={e=>setForm(f=>({...f,profesi:e.target.value}))} className="input" placeholder="Dokter / Perawat" /></div>
             <div className="input-group"><label className="input-label">Spesialisasi</label>
@@ -130,7 +130,7 @@ export default function NakesPage() {
           <div className="input-group"><label className="input-label">No. STR *</label>
             <input type="text" value={form.no_str} onChange={e=>setForm(f=>({...f,no_str:e.target.value}))} className="input" placeholder="STR-123-456" /></div>
 
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+          <div className="grid-responsive-2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
             <div className="input-group"><label className="input-label">Role Akses *</label>
               <select value={form.id_role} onChange={e=>setForm(f=>({...f,id_role:e.target.value}))} className="input">
                 <option value="">-- Pilih Role --</option>
@@ -143,7 +143,7 @@ export default function NakesPage() {
               </select></div>
           </div>
 
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginTop:8,paddingTop:14,borderTop:"1px solid var(--border)"}}>
+          <div className="grid-responsive-2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginTop:8,paddingTop:14,borderTop:"1px solid var(--border)"}}>
             <div className="input-group">
               <label className="label text-sm font-semibold text-gray-700">Email <span className="text-red-500">*</span></label>
               <input type="text" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} className="input" placeholder="susi@rs.com" /></div>

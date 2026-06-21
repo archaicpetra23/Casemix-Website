@@ -139,7 +139,7 @@ export default function MasterICDPage() {
   return (
     <DashboardLayout title="Master Data ICD" subtitle="Kode diagnosis ICD-10, tindakan ICD-9 CM, dan INA-CBGs">
       <div className="card" style={{ overflow:"hidden" }}>
-        <div style={{ display:"flex", borderBottom:"1px solid var(--border)", background:"var(--surface-hover)" }}>
+        <div className="scroll-x-container" style={{ display:"flex", borderBottom:"1px solid var(--border)", background:"var(--surface-hover)" }}>
           <div style={{ padding:"0 20px", display:"flex", alignItems:"center", gap:8, borderRight:"1px solid var(--border)" }}>
             <BookOpen size={18} color="var(--primary)" />
             <span style={{ fontSize:14, fontWeight:700, whiteSpace:"nowrap" }}>Master ICD · MySQL</span>

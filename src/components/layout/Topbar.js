@@ -5,12 +5,13 @@ import { useState } from "react";
 import { Bell, Search, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function Topbar({ title, subtitle }) {
+export default function Topbar({ title, subtitle, onMenuClick }) {
   const [showNotif, setShowNotif] = useState(false);
   const { user } = useAuth();
 
   return (
     <header
+      className="topbar-responsive"
       style={{
         position: "sticky",
         top: 0,
@@ -27,13 +28,23 @@ export default function Topbar({ title, subtitle }) {
       }}
     >
       {/* Title */}
-      <div>
-        <h1 style={{ fontSize: 17, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.2 }}>
-          {title}
-        </h1>
-        {subtitle && (
-          <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 1 }}>{subtitle}</p>
-        )}
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <button
+          onClick={onMenuClick}
+          className="btn btn-ghost btn-sm show-on-mobile-flex"
+          style={{ padding: 8, minWidth: "auto" }}
+          title="Menu"
+        >
+          <Menu size={18} />
+        </button>
+        <div>
+          <h1 style={{ fontSize: 17, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.2 }}>
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="hide-on-mobile" style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 1 }}>{subtitle}</p>
+          )}
+        </div>
       </div>
 
       {/* Right actions */}

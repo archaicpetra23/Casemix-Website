@@ -140,11 +140,15 @@ export default function DataTable({
                   style={{ fontSize: 13, height: 38, minWidth: 120, padding: "0 10px", borderRadius: "var(--radius-md)" }}
                 >
                   <option value="">Semua</option>
-                  {uniqueFilterValues[col.key]?.map(val => (
-                    <option key={String(val)} value={String(val)}>
-                      {col.render ? col.render(val) : String(val)}
-                    </option>
-                  ))}
+                  {uniqueFilterValues[col.key]?.map(val => {
+                    const rendered = col.render ? col.render(val) : String(val);
+                    const label = (typeof rendered === 'object' && rendered !== null) ? String(val) : String(rendered);
+                    return (
+                      <option key={String(val)} value={String(val)}>
+                        {label}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             ))}

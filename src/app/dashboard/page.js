@@ -88,7 +88,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts */}
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 340px", gap:20 }}>
+      <div className="grid-responsive-charts" style={{ display:"grid", gridTemplateColumns:"1fr 340px", gap:20 }}>
         <div className="card animate-fade-in-up" style={{ padding:"22px 20px", animationDelay:"200ms", animationFillMode:"both" }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
             <div>

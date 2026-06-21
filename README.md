@@ -77,7 +77,7 @@ npx prisma generate
 node prisma/seed.js
 ```
 
-*(Note: You can run `npx prisma studio` in a separate terminal if you want to view the MySQL data via the Prisma web GUI).*
+_(Note: You can run `npx prisma studio` in a separate terminal if you want to view the MySQL data via the Prisma web GUI)._
 
 ### 6. Run the Development Server
 
@@ -95,13 +95,13 @@ The application will automatically redirect you to the `/login` page. Use one of
 
 > **Note:** The password for all demo accounts is the **first name before the `@` symbol** (lowercase).
 
-| Role | Login Email | Password | Access Description |
-|---|---|---|---|
-| **Admin** | `razan@rs.com` | `razan` | Full access to all features, including **Admin Panel (Audit Log & User Management)** |
-| **Doctor** | `ahmad@rs.com` | `ahmad` | Dashboard, Patients, Medical Records |
-| **Nurse** | `rina@rs.com` | `rina` | Dashboard, Patients, Medical Records |
-| **Casemix** | `bima@rs.com` | `bima` | Dashboard, Patients, Medical Records, Claims, ICD Master |
-| **Medical Records** | `dian@rs.com` | `dian` | Dashboard, Patients, Medical Records, Claims |
+| Role                | Login Email    | Password | Access Description                                                                   |
+| ------------------- | -------------- | -------- | ------------------------------------------------------------------------------------ |
+| **Admin**           | `razan@rs.com` | `razan`  | Full access to all features, including **Admin Panel (Audit Log & User Management)** |
+| **Doctor**          | `ahmad@rs.com` | `ahmad`  | Dashboard, Patients, Medical Records                                                 |
+| **Nurse**           | `rina@rs.com`  | `rina`   | Dashboard, Patients, Medical Records                                                 |
+| **Casemix**         | `bima@rs.com`  | `bima`   | Dashboard, Patients, Medical Records, Claims, ICD Master                             |
+| **Medical Records** | `dian@rs.com`  | `dian`   | Dashboard, Patients, Medical Records, Claims                                         |
 
 ---
 
@@ -155,22 +155,27 @@ We have provided convenient scripts to control the application:
 If you prefer to run the commands manually:
 
 #### 1. Run via Docker Compose
+
 ```bash
 sudo docker-compose up --build -d
 ```
-*(Starts the database container on host port `3307` and Next.js container on port `3000`)*
+
+_(Starts the database container on host port `3307` and Next.js container on port `3000`)_
 
 #### 2. Stop Containers
+
 ```bash
 sudo docker-compose down
 ```
 
 To stop containers and delete database data (for a clean reset):
+
 ```bash
 sudo docker-compose down -v
 ```
 
 #### 3. Share with Cloudflare Tunnel manually
+
 ```bash
 cloudflared tunnel --url http://localhost:3000
 ```

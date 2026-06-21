@@ -490,3 +490,104 @@ select.input { cursor: pointer; }
   z-index: 100;
 }
 [data-tooltip]:hover::after { opacity: 1; }
+
+/* =============================================
+   RESPONSIVE UTILITIES & LAYOUT (ADDED)
+   ============================================= */
+
+/* Mobile / Tablet Styles (< 1024px) */
+@media (max-width: 1023px) {
+  .dashboard-layout {
+    display: block !important;
+  }
+
+  .sidebar-responsive {
+    position: fixed !important;
+    left: -260px !important;
+    top: 0;
+    bottom: 0;
+    height: 100vh !important;
+    z-index: 250 !important;
+    box-shadow: 4px 0 16px rgba(0,0,0,0.15) !important;
+    transition: left var(--transition-base), transform var(--transition-base) !important;
+  }
+
+  .sidebar-responsive.mobile-open {
+    left: 0 !important;
+  }
+
+  .main-content-responsive {
+    padding: 16px !important;
+    gap: 16px !important;
+  }
+
+  .topbar-responsive {
+    padding: 0 16px !important;
+  }
+
+  .grid-responsive-2,
+  .grid-responsive-3,
+  .grid-responsive-charts,
+  .grid-responsive-reports {
+    grid-template-columns: 1fr !important;
+  }
+
+  .flex-responsive-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .flex-responsive-header > button,
+  .flex-responsive-header > div > button,
+  .flex-responsive-header > div > .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .show-on-mobile {
+    display: block !important;
+  }
+
+  /* Horizontal scrolling for wide elements */
+  .scroll-x-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  .scroll-x-container::-webkit-scrollbar {
+    height: 4px;
+  }
+}
+
+/* Backdrop for Mobile Sidebar */
+.backdrop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 240;
+  animation: fadeIn 0.2s ease;
+}
+
+@media (min-width: 1023px) {
+  .backdrop-overlay {
+    display: none !important;
+  }
+}
+
+/* Show on mobile flex helper */
+.show-on-mobile-flex {
+  display: none !important;
+}
+@media (max-width: 1023px) {
+  .show-on-mobile-flex {
+    display: flex !important;
+  }
+}
+

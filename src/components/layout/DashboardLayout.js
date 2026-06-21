@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
@@ -10,6 +10,8 @@ export default function DashboardLayout({ children, title, subtitle }) {
   const { user, loading, canAccess } = useAuth();
   const router   = useRouter();
   const pathname = usePathname();
+
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -50,11 +52,14 @@ export default function DashboardLayout({ children, title, subtitle }) {
   }
 
   return (
-    <div style={{ display:"flex", minHeight:"100vh", background:"var(--background)" }}>
-      <Sidebar />
+    <div className="dashboard-layout" style={{ display:"flex", minHeight:"100vh", background:"var(--background)" }}>
+      <Sidebar mobileOpen={mobileSidebarOpen} setMobileOpen={setMobileSidebarOpen} />
+      {mobileSidebarOpen && (
+        <div className="backdrop-overlay" onClick={() => setMobileSidebarOpen(false)} />
+      )}
       <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0 }}>
-        <Topbar title={title} subtitle={subtitle} />
-        <main className="page-enter" style={{ flex:1, padding:"24px", display:"flex", flexDirection:"column", gap:24 }}>
+        <Topbar title={title} subtitle={subtitle} onMenuClick={() => setMobileSidebarOpen(true)} />
+        <main className="page-enter main-content-responsive" style={{ flex:1, padding:"24px", display:"flex", flexDirection:"column", gap:24 }}>
           {children}
         </main>
       </div>

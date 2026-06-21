@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, FileText, CreditCard,
   BookOpen, UserCog, ChevronLeft, ChevronRight,
-  LogOut, Stethoscope, Shield,
+  LogOut, Stethoscope, Shield, X,
 } from "lucide-react";
 import { useAuth, ROLE_ACCESS } from "@/hooks/useAuth";
 
@@ -30,7 +30,7 @@ const ROLE_COLOR = {
   "Rekam Medis": { bg: "#EDE9FE", text: "#7C3AED" },
 };
 
-export default function Sidebar() {
+export default function Sidebar({ mobileOpen, setMobileOpen }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname  = usePathname();
   const { user, role, logout } = useAuth();
@@ -43,7 +43,7 @@ export default function Sidebar() {
   const width = collapsed ? "var(--sidebar-collapsed)" : "var(--sidebar-width)";
 
   return (
-    <aside style={{ width, minWidth: width, height:"100vh", position:"sticky", top:0, background:"var(--sidebar-bg)", borderRight:"1px solid var(--border)", display:"flex", flexDirection:"column", transition:"width var(--transition-base), min-width var(--transition-base)", overflow:"hidden", zIndex:200, boxShadow:"2px 0 8px rgba(0,0,0,.04)" }}>
+    <aside className={`sidebar-responsive ${mobileOpen ? "mobile-open" : ""}`} style={{ width, minWidth: width, height:"100vh", position:"sticky", top:0, background:"var(--sidebar-bg)", borderRight:"1px solid var(--border)", display:"flex", flexDirection:"column", transition:"width var(--transition-base), min-width var(--transition-base)", overflow:"hidden", zIndex:200, boxShadow:"2px 0 8px rgba(0,0,0,.04)" }}>
 
       {/* Logo */}
       <div style={{ padding: collapsed ? "20px 0" : "20px 20px", borderBottom:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent: collapsed ? "center" : "space-between", gap:10, minHeight:72 }}>
@@ -59,10 +59,13 @@ export default function Sidebar() {
           )}
         </div>
         {!collapsed && (
-          <button onClick={() => setCollapsed(true)} className="btn btn-ghost btn-sm" style={{ padding:6, minWidth:"auto", flexShrink:0 }}>
+          <button onClick={() => setCollapsed(true)} className="btn btn-ghost btn-sm hide-on-mobile" style={{ padding:6, minWidth:"auto", flexShrink:0 }}>
             <ChevronLeft size={16}/>
           </button>
         )}
+        <button onClick={() => setMobileOpen(false)} className="btn btn-ghost btn-sm show-on-mobile-flex" style={{ padding:6, minWidth:"auto", flexShrink:0 }}>
+          <X size={16}/>
+        </button>
       </div>
 
       {collapsed && (
@@ -84,7 +87,7 @@ export default function Sidebar() {
             const Icon = item.icon;
             return (
               <li key={item.href}>
-                <Link href={item.href} className={`nav-link ${isActive ? "active" : ""}`} style={{ justifyContent: collapsed ? "center" : "flex-start" }} data-tooltip={collapsed ? item.label : undefined}>
+                <Link href={item.href} onClick={() => setMobileOpen(false)} className={`nav-link ${isActive ? "active" : ""}`} style={{ justifyContent: collapsed ? "center" : "flex-start" }} data-tooltip={collapsed ? item.label : undefined}>
                   <Icon size={18} className="nav-icon"/>
                   {!collapsed && <span className="animate-fade-in" style={{ whiteSpace:"nowrap" }}>{item.label}</span>}
                 </Link>
@@ -100,7 +103,7 @@ export default function Sidebar() {
                 </li>
               )}
               <li>
-                <Link href={ADMIN_NAV.href} className={`nav-link ${pathname.startsWith(ADMIN_NAV.href) ? "active" : ""}`}
+                <Link href={ADMIN_NAV.href} onClick={() => setMobileOpen(false)} className={`nav-link ${pathname.startsWith(ADMIN_NAV.href) ? "active" : ""}`}
                   style={{ justifyContent: collapsed ? "center" : "flex-start", color: pathname.startsWith(ADMIN_NAV.href) ? "#DC2626" : "#EF4444", background: pathname.startsWith(ADMIN_NAV.href) ? "#FEE2E2" : "transparent" }}
                   data-tooltip={collapsed ? ADMIN_NAV.label : undefined}
                 >
